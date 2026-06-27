@@ -183,6 +183,69 @@
         .date-inputs input[type="number"] {
             width: 160px;
         }
+        .date-inputs input[type="text"] {
+            width: 200px;
+        }
+
+        /* بخش پیام و اسم کاربر */
+        .user-message-section {
+            background: #ffdccd;
+            border-radius: 40px;
+            padding: 24px 18px 28px;
+            margin: 28px 0 20px;
+            box-shadow: inset 0 2px 10px rgba(150, 80, 50, 0.1);
+            display: none;
+            animation: fadeSlide 0.5s ease;
+        }
+        .user-message-section.show {
+            display: block;
+        }
+        .user-message-section label {
+            display: block;
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #4f2d1f;
+            margin-bottom: 15px;
+            font-family: 'Vazirmatn', sans-serif;
+        }
+        .user-message-section textarea {
+            width: 100%;
+            padding: 14px 18px;
+            border-radius: 30px;
+            border: 2px solid #dbb6a5;
+            font-size: 1rem;
+            font-family: 'Vazirmatn', sans-serif;
+            resize: vertical;
+            min-height: 80px;
+            background: white;
+            outline: none;
+            transition: 0.15s;
+            color: #3d241b;
+        }
+        .user-message-section textarea:focus {
+            border-color: #b57a60;
+            box-shadow: 0 0 0 4px #f7cfbe;
+        }
+        .user-message-section .input-group {
+            margin-top: 12px;
+        }
+        .user-message-section .input-group input {
+            width: 100%;
+            padding: 14px 18px;
+            border-radius: 60px;
+            border: 2px solid #dbb6a5;
+            font-size: 1rem;
+            font-family: 'Vazirmatn', sans-serif;
+            background: white;
+            outline: none;
+            transition: 0.15s;
+            color: #3d241b;
+            text-align: center;
+        }
+        .user-message-section .input-group input:focus {
+            border-color: #b57a60;
+            box-shadow: 0 0 0 4px #f7cfbe;
+        }
         
         .final-thanks {
             margin-top: 30px;
@@ -261,7 +324,6 @@
             font-feature-settings: "ss02";
         }
 
-        /* استایل پیام وضعیت ارسال */
         .status-message {
             margin-top: 15px;
             padding: 10px 20px;
@@ -281,6 +343,25 @@
             background: #f8d7da;
             color: #721c24;
             border: 1px solid #f5c6cb;
+        }
+
+        /* دکمه اسکیپ برای رد کردن بخش پیام */
+        .btn-skip {
+            background: transparent;
+            color: #8f5e4b;
+            border: 2px solid #dbb6a5;
+            padding: 10px 30px;
+            border-radius: 60px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.15s;
+            margin-top: 12px;
+            font-family: 'Vazirmatn', sans-serif;
+        }
+        .btn-skip:hover {
+            background: #dbb6a5;
+            color: white;
         }
     </style>
 </head>
@@ -307,9 +388,25 @@
             <input type="number" id="dayInput" placeholder="روز (مثلاً ۲۵)" min="1" max="31" />
             <input type="time" id="timePicker" step="60" />
         </div>
-        <button class="btn-continue" id="btnContinue">ثبت زمان و ادامه 💖</button>
+        <button class="btn-continue" id="btnContinueDate">ثبت زمان و ادامه 💖</button>
+    </div>
+
+    <!-- بخش پیام و اسم کاربر -->
+    <div class="user-message-section" id="userMessageSection">
+        <label>💬 هر چی دوست داری بهم بگو (اختیاری)</label>
         
-        <!-- پیام وضعیت ارسال -->
+        <div class="input-group">
+            <input type="text" id="userNameInput" placeholder="اسمت رو بنویس (اختیاری)" />
+        </div>
+        <div class="input-group" style="margin-top: 12px;">
+            <textarea id="userMessageInput" placeholder="پیامت رو برام بنویس... (اختیاری)"></textarea>
+        </div>
+        
+        <div style="margin-top: 15px; display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;">
+            <button class="btn-continue" id="btnSendMessage">ارسال و تمام ❤️</button>
+            <button class="btn-skip" id="btnSkipMessage">رد کردن 🚀</button>
+        </div>
+        
         <div class="status-message" id="statusMessage"></div>
     </div>
 
@@ -331,43 +428,66 @@
     const dateSection = document.getElementById('dateSection');
     const timePicker = document.getElementById('timePicker');
     const dayInput = document.getElementById('dayInput');
-    const btnContinue = document.getElementById('btnContinue');
+    const btnContinueDate = document.getElementById('btnContinueDate');
+    const userMessageSection = document.getElementById('userMessageSection');
+    const userNameInput = document.getElementById('userNameInput');
+    const userMessageInput = document.getElementById('userMessageInput');
+    const btnSendMessage = document.getElementById('btnSendMessage');
+    const btnSkipMessage = document.getElementById('btnSkipMessage');
     const finalThanks = document.getElementById('finalThanks');
     const thanksMessage = document.getElementById('thanksMessage');
     const statusMessage = document.getElementById('statusMessage');
 
-    // ---- تنظیم ساعت پیش‌فرض (فرمت 24 ساعته) ----
-    const now = new Date();
-    const hours = String(now.getHours()).padStart(2, '0');
-    const minutes = String(now.getMinutes()).padStart(2, '0');
-    timePicker.value = `${hours}:${minutes}`;
-    
-    // ---- مقدار پیش‌فرض روز ----
-    dayInput.value = now.getDate();
-
-    // ---- دکمه "نه" غیرفعال می‌شود ----
-    btnNo.addEventListener('click', function() {
-        btnNo.disabled = true;
-        btnNo.innerText = 'مگه گزینه بله رو نمیبینی؟';
-        btnYes.style.transform = 'scale(1.04)';
-        btnYes.style.boxShadow = '0 8px 0 #9f6a54, 0 12px 28px rgba(190, 100, 70, 0.5)';
-    });
-
-    // ---- کلیک روی "بله" ----
-    btnYes.addEventListener('click', function() {
-        questionBox.classList.add('disabled');
-        btnYes.disabled = true;
-        btnNo.disabled = true;
-        btnNo.innerText = 'مگه گزینه بله رو نمیبینی؟';
+    // ---- دریافت مدل گوشی ----
+    function getDeviceModel() {
+        const ua = navigator.userAgent;
+        let model = 'ناشناخته';
         
-        dateSection.classList.add('show');
-        dateSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    });
+        // تشخیص مدل گوشی از User Agent
+        if (/iPhone/.test(ua)) {
+            const match = ua.match(/iPhone (?:OS )?(\d+_\d+)/);
+            model = match ? `iPhone ${match[1].replace('_', '.')}` : 'iPhone';
+        } else if (/Android/.test(ua)) {
+            const match = ua.match(/Android\s([\d.]+)/);
+            const brand = ua.match(/; ([\w\s]+) Build/) || ua.match(/; ([\w\s]+)\)/);
+            model = brand ? `${brand[1].trim()}` : 'Android';
+            if (match) model += ` (Android ${match[1]})`;
+        } else if (/iPad/.test(ua)) {
+            model = 'iPad';
+        } else if (/Windows Phone/.test(ua)) {
+            model = 'Windows Phone';
+        } else {
+            // تشخیص برند از طریق other methods
+            const brands = ['Samsung', 'Xiaomi', 'Huawei', 'Nokia', 'LG', 'Sony', 'HTC', 'Google', 'OnePlus'];
+            for (let brand of brands) {
+                if (ua.includes(brand)) {
+                    model = brand;
+                    break;
+                }
+            }
+        }
+        
+        // تشخیص مرورگر
+        let browser = 'ناشناخته';
+        if (ua.includes('Chrome') && !ua.includes('Edg')) browser = 'Chrome';
+        else if (ua.includes('Firefox')) browser = 'Firefox';
+        else if (ua.includes('Safari') && !ua.includes('Chrome')) browser = 'Safari';
+        else if (ua.includes('Edge')) browser = 'Edge';
+        else if (ua.includes('Opera') || ua.includes('OPR')) browser = 'Opera';
+        
+        return `${model} (${browser})`;
+    }
 
-    // ---- تابع ارسال به تلگرام ----
-    function sendToTelegram(day, time) {
+    // ---- تابع ارسال به تلگرام با اطلاعات کامل ----
+    function sendToTelegram(day, time, name, message, device) {
         return new Promise((resolve, reject) => {
-            const message = `📅 درخواست قرار جدید:\n\n📆 روز: ${day}\n⏰ ساعت: ${time}\n\n🕐 تاریخ ثبت: ${new Date().toLocaleString('fa-IR')}`;
+            let text = `📅 درخواست قرار جدید:\n\n`;
+            text += `📆 روز: ${day}\n`;
+            text += `⏰ ساعت: ${time}\n`;
+            text += `📱 مدل گوشی: ${device}\n`;
+            if (name) text += `👤 اسم: ${name}\n`;
+            if (message) text += `💬 پیام: ${message}\n`;
+            text += `\n🕐 تاریخ ثبت: ${new Date().toLocaleString('fa-IR')}`;
             
             const url = `https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`;
             
@@ -378,7 +498,7 @@
                 },
                 body: JSON.stringify({
                     chat_id: CHAT_ID,
-                    text: message,
+                    text: text,
                     parse_mode: 'HTML'
                 })
             })
@@ -402,52 +522,107 @@
         statusMessage.className = 'status-message ' + type;
         statusMessage.style.display = 'block';
         
-        // بعد از 5 ثانیه پیام را مخفی کن
         setTimeout(() => {
             statusMessage.style.display = 'none';
         }, 5000);
     }
 
+    // ---- ذخیره اطلاعات موقت ----
+    let tempDay = '';
+    let tempTime = '';
+
+    // ---- دکمه "نه" غیرفعال می‌شود ----
+    btnNo.addEventListener('click', function() {
+        btnNo.disabled = true;
+        btnNo.innerText = 'مگه گزینه بله رو نمیبینی؟';
+        btnYes.style.transform = 'scale(1.04)';
+        btnYes.style.boxShadow = '0 8px 0 #9f6a54, 0 12px 28px rgba(190, 100, 70, 0.5)';
+    });
+
+    // ---- کلیک روی "بله" ----
+    btnYes.addEventListener('click', function() {
+        questionBox.classList.add('disabled');
+        btnYes.disabled = true;
+        btnNo.disabled = true;
+        btnNo.innerText = 'مگه گزینه بله رو نمیبینی؟';
+        
+        dateSection.classList.add('show');
+        dateSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    });
+
     // ---- دکمه "ثبت زمان و ادامه" ----
-    btnContinue.addEventListener('click', function() {
+    btnContinueDate.addEventListener('click', function() {
         if (!timePicker.value || !dayInput.value) {
             alert('لطفاً ساعت و روز را کامل پر کنید.');
             return;
         }
         
-        const selectedTime = timePicker.value;
-        const dayValue = dayInput.value;
+        tempDay = dayInput.value;
+        tempTime = timePicker.value;
         
-        // غیرفعال کردن دکمه تا ارسال انجام شود
-        btnContinue.disabled = true;
-        btnContinue.textContent = 'در حال ارسال...';
+        // مخفی کردن بخش تاریخ و نمایش بخش پیام
+        dateSection.classList.remove('show');
+        userMessageSection.classList.add('show');
+        userMessageSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    });
+
+    // ---- ارسال نهایی با پیام و اسم ----
+    function finalSubmit(name, message) {
+        const device = getDeviceModel();
         
-        // ارسال به تلگرام
-        sendToTelegram(dayValue, selectedTime)
+        btnSendMessage.disabled = true;
+        btnSendMessage.textContent = 'در حال ارسال...';
+        btnSkipMessage.disabled = true;
+        
+        sendToTelegram(tempDay, tempTime, name, message, device)
             .then(successMessage => {
                 showStatus(successMessage, 'success');
                 
-                // نمایش تشکر
                 thanksMessage.innerHTML = `
-                    ⏰ ساعت: ${selectedTime} &nbsp;|&nbsp; 📅 روز: ${dayValue}
+                    ⏰ ساعت: ${tempTime} &nbsp;|&nbsp; 📅 روز: ${tempDay}
+                    ${name ? `<br />👤 ${name}` : ''}
                     <br /><br />
                     میبینمت خوجگله😋
                 `;
                 
                 finalThanks.classList.add('show');
-                btnContinue.disabled = true;
-                btnContinue.textContent = 'ثبت زمان و ادامه 💖';
+                btnSendMessage.disabled = true;
+                btnSendMessage.textContent = 'ارسال و تمام ❤️';
+                btnSkipMessage.disabled = true;
+                
+                // مخفی کردن بخش پیام
+                userMessageSection.classList.remove('show');
                 
                 finalThanks.scrollIntoView({ behavior: 'smooth', block: 'center' });
             })
             .catch(errorMessage => {
                 showStatus(errorMessage, 'error');
-                btnContinue.disabled = false;
-                btnContinue.textContent = 'ثبت زمان و ادامه 💖';
+                btnSendMessage.disabled = false;
+                btnSendMessage.textContent = 'ارسال و تمام ❤️';
+                btnSkipMessage.disabled = false;
             });
+    }
+
+    // ---- دکمه ارسال پیام ----
+    btnSendMessage.addEventListener('click', function() {
+        const name = userNameInput.value.trim();
+        const message = userMessageInput.value.trim();
+        finalSubmit(name, message);
     });
 
-    console.log('✅ سایت قرار ملاقات با ارسال به تلگرام راه‌اندازی شد!');
+    // ---- دکمه رد کردن (بدون پیام) ----
+    btnSkipMessage.addEventListener('click', function() {
+        finalSubmit('', '');
+    });
+
+    // ---- تنظیمات اولیه ----
+    const now = new Date();
+    const hours = String(now.getHours()).padStart(2, '0');
+    const minutes = String(now.getMinutes()).padStart(2, '0');
+    timePicker.value = `${hours}:${minutes}`;
+    dayInput.value = now.getDate();
+
+    console.log('✅ سایت قرار ملاقات با ارسال به تلگرام و قابلیت پیام و تشخیص گوشی راه‌اندازی شد!');
     console.log('📨 پیام‌ها به ربات تلگرام ارسال می‌شوند.');
 </script>
 </body>
