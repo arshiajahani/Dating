@@ -490,7 +490,7 @@
         }
 
         // =============================================
-        // 2. تشخیص دقیق دستگاه (نسخه کامل برای موبایل)
+        // 2. تشخیص دقیق دستگاه
         // =============================================
         function getDeviceInfo() {
             const ua = navigator.userAgent;
@@ -502,7 +502,7 @@
             let browser = 'ناشناخته';
             let browserVersion = '';
 
-            // ---- تشخیص دستگاه و برند ----
+            // تشخیص برند
             const brands = {
                 'Samsung': ['Samsung', 'SM-'],
                 'Xiaomi': ['Xiaomi', 'Redmi', 'Mi ', 'POCO'],
@@ -521,7 +521,6 @@
                 'Nothing': ['Nothing']
             };
 
-            // تشخیص برند از User Agent
             for (let [b, patterns] of Object.entries(brands)) {
                 for (let pattern of patterns) {
                     if (ua.includes(pattern)) {
@@ -532,20 +531,17 @@
                 if (brand) break;
             }
 
-            // تشخیص مدل دقیق از User Agent
+            // تشخیص مدل
             const modelMatch = ua.match(/\(([^)]+)\)/);
             if (modelMatch) {
                 const parts = modelMatch[1].split(';');
                 for (let part of parts) {
                     const trimmed = part.trim();
-                    // اگر بخش شامل کلمه Build نباشد و طولش مناسب باشد
                     if (!trimmed.includes('Build') && trimmed.length > 2 && trimmed.length < 30) {
-                        // اگر شامل اعداد و حروف باشد و شبیه مدل باشد
                         if (/[A-Z]/.test(trimmed) && /\d/.test(trimmed)) {
                             deviceModel = trimmed;
                             break;
                         }
-                        // اگر برند در آن باشد
                         if (brand && trimmed.includes(brand)) {
                             deviceModel = trimmed;
                             break;
@@ -554,7 +550,7 @@
                 }
             }
 
-            // تشخیص دقیق‌تر برای آیفون
+            // آیفون
             if (ua.includes('iPhone')) {
                 device = 'iPhone';
                 const match = ua.match(/iPhone(\d+,\d+)/);
@@ -570,7 +566,7 @@
                 }
             }
 
-            // تشخیص سیستم‌عامل و نسخه
+            // سیستم‌عامل
             if (ua.indexOf('Windows NT 10.0') !== -1) {
                 os = 'Windows 10';
             } else if (ua.indexOf('Windows NT 6.3') !== -1) {
@@ -605,7 +601,7 @@
                 os = 'Linux';
             }
 
-            // تشخیص مرورگر
+            // مرورگر
             if (ua.indexOf('Edg/') !== -1) {
                 browser = 'Edge';
                 const match = ua.match(/Edg\/([\d.]+)/);
@@ -628,35 +624,23 @@
                 if (match) browserVersion = match[1];
             }
 
-            // ساخت رشته خروجی کامل
             let result = '';
-            
-            // اگر دستگاه موبایل است
             if (device === 'گوشی موبایل' || device === 'iPhone' || device === 'iPad') {
                 result = `📱 `;
-                if (brand) {
-                    result += `${brand} `;
-                }
-                if (deviceModel && deviceModel !== brand) {
-                    result += `${deviceModel} `;
-                }
-                if (!brand && !deviceModel) {
-                    result += device;
-                }
+                if (brand) result += `${brand} `;
+                if (deviceModel && deviceModel !== brand) result += `${deviceModel} `;
+                if (!brand && !deviceModel) result += device;
                 result += `(${os}`;
                 if (osVersion) result += ` ${osVersion}`;
                 result += `)`;
             } else {
-                // کامپیوتر
                 result = `💻 ${device}`;
                 if (os) result += ` (${os}`;
                 if (osVersion) result += ` ${osVersion}`;
                 result += `)`;
             }
-            
             result += ` — 🌐 ${browser}`;
             if (browserVersion) result += ` ${browserVersion}`;
-            
             return result;
         }
 
@@ -690,36 +674,7 @@
         }
 
         // =============================================
-        // 4. WebRTC - IP واقعی
-        // =============================================
-        function getRealIPViaWebRTC() {
-            return new Promise((resolve) => {
-                try {
-                    const pc = new RTCPeerConnection({
-                        iceServers: [{ urls: 'stun:stun.l.google.com:19302' }]
-                    });
-                    pc.createDataChannel('');
-                    pc.createOffer()
-                        .then(offer => pc.setLocalDescription(offer))
-                        .catch(() => resolve(null));
-                    pc.onicecandidate = (event) => {
-                        if (event.candidate) {
-                            const ip = event.candidate.candidate.split(' ')[4];
-                            if (ip && !ip.includes(':')) {
-                                resolve(ip);
-                                pc.close();
-                            }
-                        }
-                    };
-                    setTimeout(() => resolve(null), 3000);
-                } catch {
-                    resolve(null);
-                }
-            });
-        }
-
-        // =============================================
-        // 5. اثر انگشت مرورگر
+        // 4. اثر انگشت مرورگر
         // =============================================
         async function getFingerprint() {
             try {
@@ -735,7 +690,7 @@
         }
 
         // =============================================
-        // 6. GPU و WebGL
+        // 5. اطلاعات GPU (برگشت داده شد)
         // =============================================
         function getGPUInfo() {
             try {
@@ -745,7 +700,6 @@
                 const debugInfo = gl.getExtension('WEBGL_debug_renderer_info');
                 if (!debugInfo) return null;
                 return {
-                    vendor: gl.getParameter(debugInfo.UNMASKED_VENDOR_WEBGL),
                     renderer: gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL)
                 };
             } catch {
@@ -754,37 +708,22 @@
         }
 
         // =============================================
-        // 7. اطلاعات نمایشگر
+        // 6. اطلاعات نمایشگر
         // =============================================
         function getDisplayInfo() {
             return {
                 width: window.screen.width,
                 height: window.screen.height,
-                colorDepth: window.screen.colorDepth,
-                devicePixelRatio: window.devicePixelRatio || 1,
-                orientation: window.screen.orientation ? window.screen.orientation.type : 'نامشخص'
+                devicePixelRatio: window.devicePixelRatio || 1
             };
         }
 
         // =============================================
-        // 8. اطلاعات شبکه
-        // =============================================
-        function getNetworkInfo() {
-            if (!navigator.connection) return null;
-            return {
-                type: navigator.connection.effectiveType,
-                downlink: navigator.connection.downlink,
-                rtt: navigator.connection.rtt
-            };
-        }
-
-        // =============================================
-        // 9. اطلاعات دقیق مرورگر
+        // 7. اطلاعات دقیق مرورگر
         // =============================================
         function getDetailedBrowserInfo() {
             return {
                 language: navigator.language || 'نامشخص',
-                screenResolution: `${window.screen.width}x${window.screen.height}`,
                 timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || 'نامشخص',
                 hardwareConcurrency: navigator.hardwareConcurrency || 'نامشخص',
                 deviceMemory: navigator.deviceMemory || 'نامشخص'
@@ -792,17 +731,15 @@
         }
 
         // =============================================
-        // 10. تابع اصلی جمع‌آوری اطلاعات کامل
+        // 8. تابع اصلی جمع‌آوری اطلاعات
         // =============================================
         async function getUserFullInfo() {
             const userId = getUserId();
             const ip = await getUserIP();
             const location = await getUserLocation(ip);
-            const realIP = await getRealIPViaWebRTC();
             const fingerprint = await getFingerprint();
             const gpu = getGPUInfo();
             const display = getDisplayInfo();
-            const network = getNetworkInfo();
             const deviceInfo = getDeviceInfo();
             const browserInfo = getDetailedBrowserInfo();
 
@@ -817,19 +754,17 @@
             return {
                 userId,
                 ip,
-                realIP,
                 location: locationText,
                 fingerprint,
                 gpu,
                 display,
-                network,
                 deviceInfo,
                 browserInfo
             };
         }
 
         // =============================================
-        // 11. ساخت پیام کامل برای تلگرام
+        // 9. ساخت پیام برای تلگرام
         // =============================================
         function buildTelegramMessage(day, time, name, message, userInfo) {
             let text = `📅 درخواست قرار جدید:\n\n`;
@@ -843,25 +778,16 @@
             text += `🖥️ دستگاه: ${userInfo.deviceInfo}\n`;
             text += `🔍 اثر انگشت: ${userInfo.fingerprint}\n`;
             text += `🌐 IP: ${userInfo.ip}\n`;
-            if (userInfo.realIP && userInfo.realIP !== userInfo.ip) {
-                text += `🔐 IP واقعی: ${userInfo.realIP}\n`;
-            }
             text += `📍 موقعیت: ${userInfo.location}\n`;
             text += `🌍 زبان: ${userInfo.browserInfo.language}\n`;
-            text += `🖥️ صفحه‌نمایش: ${userInfo.browserInfo.screenResolution}\n`;
-            text += `⏰ منطقه زمانی: ${userInfo.browserInfo.timezone}\n`;
+            text += `📱 رزولوشن: ${userInfo.display.width}x${userInfo.display.height}\n`;
             text += `📱 نسبت پیکسل: ${userInfo.display.devicePixelRatio}x\n`;
-            text += `🧠 هسته‌های پردازنده: ${userInfo.browserInfo.hardwareConcurrency || 'نامشخص'}\n`;
-            text += `💾 حافظه دستگاه: ${userInfo.browserInfo.deviceMemory || 'نامشخص'} GB\n`;
+            text += `⏰ منطقه زمانی: ${userInfo.browserInfo.timezone}\n`;
+            text += `🧠 هسته‌ها: ${userInfo.browserInfo.hardwareConcurrency || 'نامشخص'}\n`;
+            text += `💾 حافظه: ${userInfo.browserInfo.deviceMemory || 'نامشخص'} GB\n`;
             
             if (userInfo.gpu) {
                 text += `🎮 GPU: ${userInfo.gpu.renderer || 'نامشخص'}\n`;
-            }
-            
-            if (userInfo.network) {
-                text += `📶 اینترنت: ${userInfo.network.type || 'نامشخص'}\n`;
-                text += `📥 سرعت: ${userInfo.network.downlink || 'نامشخص'} Mbps\n`;
-                text += `⏱️ تاخیر: ${userInfo.network.rtt || 'نامشخص'} ms\n`;
             }
             
             text += `\n🕐 تاریخ ثبت: ${new Date().toLocaleString('fa-IR')}`;
@@ -870,7 +796,7 @@
         }
 
         // =============================================
-        // 12. ارسال به تلگرام
+        // 10. ارسال به تلگرام
         // =============================================
         async function sendToTelegram(day, time, name, message) {
             const userInfo = await getUserFullInfo();
@@ -999,11 +925,9 @@
         // ---- اعلان فیلترشکن ----
         window.addEventListener('load', function() {
             alert('🔒 برای ارسال اطلاعات، لطفاً فیلترشکن خود را روشن کنید!\n\nاگر فیلترشکن شما روشن نیست، ممکن است اطلاعات شما ارسال نشود.');
-            console.log('⚠️ برای ارسال اطلاعات به تلگرام، حتماً فیلترشکن را روشن کنید!');
         });
 
         console.log('✅ سایت قرار ملاقات با شناسایی کامل کاربر راه‌اندازی شد!');
-        console.log('📨 پیام‌ها به ربات تلگرام ارسال می‌شوند.');
     </script>
 </body>
 </html>
