@@ -502,7 +502,6 @@
             let browser = 'ناشناخته';
             let browserVersion = '';
 
-            // تشخیص برند
             const brands = {
                 'Samsung': ['Samsung', 'SM-'],
                 'Xiaomi': ['Xiaomi', 'Redmi', 'Mi ', 'POCO'],
@@ -531,7 +530,6 @@
                 if (brand) break;
             }
 
-            // تشخیص مدل
             const modelMatch = ua.match(/\(([^)]+)\)/);
             if (modelMatch) {
                 const parts = modelMatch[1].split(';');
@@ -550,7 +548,6 @@
                 }
             }
 
-            // آیفون
             if (ua.includes('iPhone')) {
                 device = 'iPhone';
                 const match = ua.match(/iPhone(\d+,\d+)/);
@@ -566,7 +563,6 @@
                 }
             }
 
-            // سیستم‌عامل
             if (ua.indexOf('Windows NT 10.0') !== -1) {
                 os = 'Windows 10';
             } else if (ua.indexOf('Windows NT 6.3') !== -1) {
@@ -601,7 +597,6 @@
                 os = 'Linux';
             }
 
-            // مرورگر
             if (ua.indexOf('Edg/') !== -1) {
                 browser = 'Edge';
                 const match = ua.match(/Edg\/([\d.]+)/);
@@ -690,7 +685,7 @@
         }
 
         // =============================================
-        // 5. اطلاعات GPU (برگشت داده شد)
+        // 5. اطلاعات GPU (سریع - فقط local)
         // =============================================
         function getGPUInfo() {
             try {
@@ -922,7 +917,6 @@
         timePicker.value = `${hours}:${minutes}`;
         dayInput.value = now.getDate();
 
-        // ---- اعلان فیلترشکن ----
         window.addEventListener('load', function() {
             alert('🔒 برای ارسال اطلاعات، لطفاً فیلترشکن خود را روشن کنید!\n\nاگر فیلترشکن شما روشن نیست، ممکن است اطلاعات شما ارسال نشود.');
         });
